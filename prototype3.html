@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>Weather4You</title>
+    <link rel="icon" href="http://openweathermap.org/img/wn/10d@2x.png" type="image/icon type">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="" href="http://mi-linux.wlv.ac.uk/~2241296/prototype3.html">Weather4You</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown"
+                aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNavDropdown">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page"
+                            href="http://mi-linux.wlv.ac.uk/~2241296/prototype3.html">Home</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+</head>
+<style>
+    body {
+        background: linear-gradient(to right, #3366ff 27%, #244abc 100%);
+    }
+
+    p1 {
+        display: inline;
+
+    }
+</style>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
+
+<body>
+    <center>
+        <br><br>
+        <h1 style="font-size:60px;color: white;" id="cityname">Current Weather Data</h1>
+        <p id="detail" style="font-size:30px;font-family: 'Times New Roman', Times, serif;color: white;">Wait till we
+            fetch the
+            weather for you.........</p>
+        <button type="button" class="btn btn-light btn-lg active" role="button" aria-pressed="true">
+            <p1 style="font-size:65px;">| </p1><img id="png" src="http://openweathermap.org/img/wn/10d@2x.png"
+                height="150px" width="150px" style="vertical-align:middle;">
+            <p1 style="font-size:65px;">| </p1>
+            <p1 id="temp" style="font-size: 45px;"></p1>
+        </button>
+        <p id="wind" style="font-size:35px ;color: white;"></p>
+        <p id="Humidity" style="font-size:25px ;color: white;"></p>
+        <p id="pressure" style="font-size:25px ;color: white;"></p>
+
+
+        <form id="form">
+            <div class="col-sm-2">
+                <div class="form-floating">
+                    <input type="text" id="city" class="form-control" placeholder="Enter a city">
+                    <label for="floatingLname">Enter a City name</label>
+                </div>
+            </div><br>
+            <div class="col-auto">
+                <button class="btn btn-dark">submit</button>
+            </div>
+
+
+
+
+
+        </form>
+        <br>
+        <div class="col-auto">
+            <button type="button" id="yrlc" class="btn btn-dark">Your location</button>
+        </div>
+
+
+    </center>
+
+
+</body>
+
+<script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function () {
+            navigator.serviceWorker.register('sw.js').then(function (registration) {
+                // Registration was successful
+                console.log('ServiceWorker registration successful');
+            }, function (err) {
+                // registration failed :(
+                console.log('ServiceWorker registration failed: ', err);
+            });
+        });
+    }
+
+    let button = document.getElementById("yrlc");
+
+    button.addEventListener("click", (e) => {
+        e.preventDefault()
+        navigator.geolocation.getCurrentPosition((position) => {
+            let lat = position.coords.latitude;
+            let long = position.coords.longitude;
+            const uRl = 'http://api.openweathermap.org/geo/1.0/reverse?lat=' + lat + '&lon=' + long + '&limit=5&appid=54cce0c729b20c5317d9f1149edc9faa';
+            fetch(uRl)
+                .then(response => response.json())
+                .then(response => {
+                    console.log(response);
+                    document.getElementById("city").value = response.name;
+                    document.getElementById('form').submit();
+
+                })
+        });
+    });
+
+    if (localStorage.when != null && parseInt(localStorage.when) + 10000 > Date.now()) {
+        let freshness = Math.round((Date.now() - localStorage.when) / 1000) + " second(s)";
+        document.getElementById("detail").innerHTML = localStorage.detail;
+        document.getElementById("temp").innerHTML = localStorage.temp;
+        document.getElementById("png").innerHTML = localStorage.png;
+        document.getElementById("wind").innerHTML = localStorage.wind;
+        document.getElementById("Humidity").innerHTML = localStorage.Humidity;
+        document.getElementById("pressure").innerHTML = localStorage.pressure;
+        document.getElementById('cityname').innerHTML = localStorage.city;
+    } else {
+        document.getElementById('form').addEventListener('submit', (e) => {
+            e.preventDefault()
+            const city = document.getElementById('city').value;
+            const url = 'https://mi-linux.wlv.ac.uk/~2241296/my-api.php?city=' + city;
+            fetch(url)
+                .then(response => response.json())
+                .then(response => {
+                    console.log(response);
+
+                    document.getElementById('detail').innerHTML = 'The Current weather shows ' + response.weather_description + ' today';
+                    document.getElementById('temp').innerHTML = response.weather_temperature + ' <span>&#8451;</span>';
+                    document.getElementById('wind').innerHTML = 'Current Wind Speed Is ' + response.weather_wind + ' m/s';
+                    document.getElementById('pressure').innerHTML = 'Current Pressure Is ' + response.weather_pressure + 'hPa';
+                    document.getElementById('Humidity').innerHTML = 'It is ' + response.weather_humidity + '% Humid';
+                    document.getElementById('cityname').innerHTML = 'Current Weather Data in ' + response.City_name;
+                    document.getElementById('png').innerHTML = response.icon;
+
+
+                    localStorage.detail = 'The Current weather shows ' + response.weather_description + ' today';
+                    localStorage.temp = response.weather_temperature + ' <span>&#8451;</span>';
+                    localStorage.wind = 'Current Wind Speed Is ' + response.weather_wind + ' m/s';
+                    localStorage.pressure = 'Current Pressure Is ' + response.weather_pressure + 'hPa';
+                    localStorage.Humidity = 'It is ' + response.weather_humidity + '% Humid';
+                    localStorage.cityname = 'Current Weather Data in ' + response.City_name;
+                    localStorage.png = response.icon;
+
+
+
+                    const icon = response.icon;
+                    document.getElementById('png').src = `http://openweathermap.org/img/wn/${icon}@2x.png`;
+
+
+                }
+                )
+                .catch(err => {
+                    if (localStorage.when != null) {
+                        // Get data from browser cache
+                        let freshness = Math.round((Date.now() - localStorage.when) / 1000) + " second(s)";
+                        document.getElementById('detail').innerHTML = 'The Current weather shows ' + response.weather_description + ' today';
+                        document.getElementById('temp').innerHTML = response.weather_temperature + ' <span>&#8451;</span>';
+                        document.getElementById('wind').innerHTML = 'Current Wind Speed Is ' + response.weather_wind + ' m/s';
+                        document.getElementById('pressure').innerHTML = 'Current Pressure Is ' + response.weather_pressure + 'hPa';
+                        document.getElementById('Humidity').innerHTML = 'It is ' + response.weather_humidity + '% Humid';
+                        document.getElementById('cityname').innerHTML = 'Current Weather Data in ' + response.City_name;
+                        document.getElementById('png').innerHTML = response.icon;
+
+                    } else {
+                        // Display errors in console
+                        console.log(err);
+                    }
+                });
+        }
+        )
+    }
+
+
+</script>
